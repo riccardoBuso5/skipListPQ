@@ -1,5 +1,10 @@
+package lib;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.Vector;
 
 //Class my entry
@@ -39,9 +44,8 @@ class SkipListPQ {
 
     private double alpha; //variabile arbitraria tra 0 e 1 
     private Random rand;
-
     private Vector<LinkedList <MyEntry> > skipList; 
-    private int level; //numero di righe effettive
+    private int size; //numero di liste non vuote
     private LinkedList<MyEntry> list;
 
 
@@ -50,22 +54,24 @@ class SkipListPQ {
 
         //creo la prima lista vuota 
         list = new LinkedList<MyEntry> ();
+        list.addLast(null);
+        list.addFirst(null);
 
-        list.add(null);
-        list.add(null);
+        skipList= new Vector <LinkedList <MyEntry> > ();
         
         skipList.add(list);
-        
-        level = 1; //aumento il livello 
+    
+        rand = new Random();
     }
 
     public int size() { 
-        return level;
+        //numero di liste attualmente usate 
+        return skipList.size() -1;
     }
 
     public MyEntry min() {
-        
-    return null;
+
+        return this.skipList.get(0).get(1);
     }
 
     public void insert(int key, String value) {
@@ -77,36 +83,64 @@ class SkipListPQ {
 
         /*trovato il posto giusto lancio una moneta fino a quando non esce testa, 
         per ogni croce aggiungo un livell ed inserisco la mia entry*/
+         
         int level = generateEll(alpha, key);
 
-        for(int i=level; i!= 0;i--){
-            LinkedList <MyEntry> ls = skipList.get(i);
-            ls.add(column,e); //inserco la entry nella colonna  trovata 
+
+        //creo tante liste vuote, quante il numero di livelli che dovrò aggiungere
+        for(int i=size;i<=level;i++){
+            LinkedList <MyEntry> ls = new LinkedList<MyEntry> ();
+            ls.add(null);
+            ls.add(null);
+            skipList.add(ls);
+            size++;
         }
 
+
+        for(int i=0; i<=level; i++){
+            LinkedList <MyEntry> ls = skipList.remove(i); //prendo la lista associata al livello
+
+            //modifico la lista
+
+            //tolgo le sentinelle
+            ls.removeFirst();
+            ls.removeLast();
+
+            if(column > ls.size()){
+                //inserisci in coda 
+                ls.addLast(e);
+            }else{
+                ls.add(column,e); //inserco la entry nella colonna  trovata 
+            }
+
+            //aggiungo le sentinelle
+            ls.addLast(null);
+            ls.addFirst(null);
+            skipList.add(i, ls); //inserisco la lista nel livello i della skiplist
+        }
 
     }
 
     private int  search(int key){
 
-        int i = level;
-        int j = 0; 
+        int col = 0;  //prima colonna diversa dalla sentinella
 
-        for(i=level; i!= 0;i--){ 
-            LinkedList<MyEntry> miaLista = skipList.get(i); 
+        for(int i=size; i>=0;i--){ 
 
-            int miaK = miaLista.get(j).getKey(); 
+            LinkedList<MyEntry> miaLista = new LinkedList<MyEntry>(skipList.get(i));
+            //ogni iterazione del ciclo scendo di un livello
+            miaLista.removeFirst();
 
-            //scorro la lista fino a quando non trovo il più piccolo nodo maggiore, successivo a k 
-            while(miaK < key || j == miaLista.size()-1){
-                j++;
+
+            //scorro la lista finchè non trovo un valore > o uguale alla mia key, o fino a quando non trovo la sentinella di fine 
+            while( miaLista.get(col) != null &&  miaLista.get(col).getKey() < key ){
+                col++;
             }
+            miaLista.addFirst(null);
             
-            
-            j--; //torno al nodo < di k
 
         }
-        int col = j; //colonna precedente o uguale alla key, dove inserire la nuova entry
+         //colonna precedente o uguale alla key, dove inserire la nuova entry
         return col;
     }
 
@@ -127,19 +161,82 @@ class SkipListPQ {
     }
 
     public MyEntry removeMin() {
-	// TO BE COMPLETED 
-    return null;
+        MyEntry min = min();
+        for(int i=0;i< size;i++){
+            if(skipList.get(i).get(1) == min){
+                skipList.get(i).remove(1);
+            }
+
+        }
+    return min;
     }
 
     public void print() {
 
-        //TO BE COMPLETED
+        for(int i=  size()-1 ;i >= 0; i--){
+            System.out.print("lv "+i+ ": ");
+            LinkedList <MyEntry> ls = this.skipList.get(i);
+        
+            for(int j=1;j<=ls.size()-2;j++){
+                try{
+                    System.out.print(ls.get(j)+" ");
+                }catch(Exception e){
+                    System.out.println(e);
+                }
+            }
+            System.out.println();
+        }
     }
+
+   
 }
 
 //main
 public class Main {
     public  static void main(String[] args){
+        /* 
+        args[0] = "test.txt";
+        if(args.length < 1){
+                System.out.println("numero parametri insufficienti");
+        }
+        */
+
+        
+        String path = "/home/riccardo/Documenti/dati e algoritmi/PriorityQueue/bin/lib/test.txt";
+        int n;
+        double alpha;
+        int in;
+        SkipListPQ sk;
+
+        try {
+            File file = new File(path);
+            Scanner sc = new Scanner(file);
+
+            n = Integer.parseInt(sc.nextLine());
+            alpha = Double.parseDouble(sc.nextLine());
+            sk = new SkipListPQ(alpha);
+
+            for(int i=0;i<n-1;i++){
+                in = Integer.parseInt(sc.nextLine());
+                if(in == 0){
+                    System.out.println("l'entry con chiave minima è : "+sk.min());
+                }else if(in == 1){
+                        System.out.println("tolgo la  chiave minima è : "+sk.removeMin());
+                }else if(in == 2){
+                    int k = Integer.parseInt(sc.nextLine());
+                    String e = sc.nextLine();
+                    sk.insert(k, e+"");
+                }else if(in == 3){
+                    sk.print();
+                }
+            }
+
+            sc.close();
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+        
     
+
     }
 }
