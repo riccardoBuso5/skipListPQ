@@ -1,5 +1,3 @@
-package lib;
-
 import java.util.LinkedList;
 import java.util.Random;
 import java.util.Vector;
@@ -41,31 +39,20 @@ class SkipListPQ {
 
     private double alpha; //variabile arbitraria tra 0 e 1 
     private Random rand;
-    /* 
-    private Node headNode;  
-    private Node tailNode;
-    */
+
     private Vector<LinkedList <MyEntry> > skipList; 
-    private int level; //numero di liste
+    private int level; //numero di righe effettive
     private LinkedList<MyEntry> list;
 
 
     public SkipListPQ(double alpha) {
         this.alpha = alpha;
 
-        /* 
-        //creo la prima lista vuota, collegando testa e coda
-        headNode = new Node(tailNode,0);
-        tailNode = new Node(headNode, 1);
-        */
-
         //creo la prima lista vuota 
         list = new LinkedList<MyEntry> ();
 
-        
         list.add(null);
         list.add(null);
-        
         
         skipList.add(list);
         
@@ -77,7 +64,7 @@ class SkipListPQ {
     }
 
     public MyEntry min() {
-	// TO BE COMPLETED 
+        
     return null;
     }
 
